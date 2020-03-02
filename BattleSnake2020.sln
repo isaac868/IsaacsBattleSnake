@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "BattleSnake2020", "BattleSnake2020.pyproj", "{95DA261A-0CB5-494D-B2CD-A41800B055FF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95DA261A-0CB5-494D-B2CD-A41800B055FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95DA261A-0CB5-494D-B2CD-A41800B055FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {244A42D5-883E-4A22-B0AF-D8F77F3182DF}
+	EndGlobalSection
+EndGlobal
