@@ -6,13 +6,35 @@ class node:
     distance = 0.0
     previous = None
 
-def generate_adjacency_list(width, height, food_coords : list, player_coords : list):
+def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list):
     return_map = {}
     tmp_map = {}
+    snake_coords = []
     food_node = None
     player_node = None
+
+    for snake in snake_array:
+        for coord in snake["body"]:
+            if coord == us_coord:
+                continue
+            snake_coords.append(coord["y"] * height + coord["x"])
+        head = [snake["body"][0]["x"], snake["body"][0]["y"]]
+        if head == us_coord:
+            continue
+        if head[0] - 1 >= 0:
+            snake_coords.append(head[1] * height + head[0] - 1)
+        if head[0] + 1 < width:
+            snake_coords.append(head[1] * height + head[0] + 1)
+        if head[1] - 1 >= 0:
+            snake_coords.append((head[1] - 1) * height + head[0])
+        if head[1] + 1 < height:
+            snake_coords.append((head[1] + 1)* height + head[0])
+
     for i in range(0, height):
         for j in range(0, width):
+            if i*height + j in snake_coords:
+                continue
+
             tmp_node = node()
             tmp_node.x = j
             tmp_node.y = i
@@ -28,12 +50,13 @@ def generate_adjacency_list(width, height, food_coords : list, player_coords : l
 
     for i in range(0, height):
         for j in range(0, width):
-            if j - 1 >= 0:
-                return_map[tmp_map[j - 1 + i* height]].append([tmp_map[j + i * height], 1])
-                return_map[tmp_map[j + i * height]].append([tmp_map[j - 1 + i* height], 1])
-            if i - 1 >= 0:
-                return_map[tmp_map[j + (i - 1) * height]].append([tmp_map[j + i * height], 1])
-                return_map[tmp_map[j + i * height]].append([tmp_map[j + (i - 1) * height], 1])
+            if (j+ i* height) in tmp_map:
+                if j - 1 >= 0 and (j - 1 + i* height) in tmp_map:
+                    return_map[tmp_map[j - 1 + i* height]].append([tmp_map[j + i * height], 1])
+                    return_map[tmp_map[j + i * height]].append([tmp_map[j - 1 + i* height], 1])
+                if i - 1 >= 0 and (j + (i - 1) * height) in tmp_map:
+                    return_map[tmp_map[j + (i - 1) * height]].append([tmp_map[j + i * height], 1])
+                    return_map[tmp_map[j + i * height]].append([tmp_map[j + (i - 1) * height], 1])
 
     return [return_map, food_node, player_node]
 

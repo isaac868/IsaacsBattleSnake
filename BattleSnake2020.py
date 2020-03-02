@@ -51,7 +51,7 @@ def move():
     food_coord = [data["board"]["food"][0]["x"],data["board"]["food"][0]["y"]]
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
 
-    g = dg.generate_adjacency_list(data["board"]["height"], data["board"]["width"], food_coord, player_coord)
+    g = dg.generate_adjacency_list(data["board"]["height"], data["board"]["width"], data["board"]["snakes"], data["you"]["body"][0], food_coord, player_coord)
     dg.dijkstra(g[0], g[2])
     
     tmp_node = g[1]
