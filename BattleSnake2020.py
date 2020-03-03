@@ -3,8 +3,10 @@ import os
 import random
 import numpy as np
 import Digraph as dg
+import SnakeFunctions as sf
 import bottle
 from bottle import HTTPResponse
+from random import choice
 
 
 @bottle.route("/")
@@ -45,7 +47,7 @@ def move():
     Your response must include your move of up, down, left, or right.
     """
     data = bottle.request.json
-    print("MOVE:", json.dumps(data))
+    print("MOVE:", data["turn"])
 
 
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
@@ -54,37 +56,60 @@ def move():
     digraph = return_data[0]
     food_nodes = return_data[1]
     player_node = return_data[2]
+    index_map = return_data[3]
 
     dg.dijkstra(digraph, player_node)
     
     tmp_node = None
     food_nodes.sort(key = lambda node: node.distance)
     for food in food_nodes:
-        if dg.is_reachable(digraph, player_node, food) == True:
+        tmp_digraph = digraph.copy()
+        if dg.is_reachable(tmp_digraph, player_node, food) == True:
             tmp_node = food
-    
-    if tmp_node is not None:
-        while tmp_node.previous != None:
-            if tmp_node.previous == player_node:
-                break
+            
+            while tmp_node.previous != None:
+                if tmp_node.previous == player_node:
+                    break
+                else:
+                    tmp_node = tmp_node.previous
+
+            if tmp_node is None:
+                continue
+
+            number = [0]
+            tmp_digraph = digraph.copy()
+            sf.get_area_resulting_from_next_move(tmp_digraph, tmp_node, number)
+            area = number[0]
+
+            if area <= len(data["you"]["body"]):
+                continue
             else:
-                tmp_node = tmp_node.previous
+                break
 
     # Choose a random direction to move in
     directions = ["up", "down", "left", "right"]
 
     move = "down"
-    if tmp_node is not None:
-        if tmp_node.x < player_coord[0]:
-            move = "left"
-        elif tmp_node.x > player_coord[0]:
-            move = "right"
-        elif tmp_node.y < player_coord[1]:
-            move = "up"
-        elif tmp_node.y > player_coord[1]:
-            move = "down"
-        else:
-            move = "down"
+    if tmp_node is None:
+        number = [0]
+        max = 0
+        for adj_node in digraph[player_node]:
+            tmp_digraph = digraph.copy()
+            sf.get_area_resulting_from_next_move(tmp_digraph, adj_node[0], number)
+            if number[0] >= max:
+                tmp_node = adj_node[0]
+                max = number[0]
+
+    if tmp_node.x < player_coord[0]:
+        move = "left"
+    elif tmp_node.x > player_coord[0]:
+        move = "right"
+    elif tmp_node.y < player_coord[1]:
+        move = "up"
+    elif tmp_node.y > player_coord[1]:
+        move = "down"
+    else:
+        move = "down"
 
     # Shouts are messages sent to all the other snakes in the game.
     # Shouts are not displayed on the game board.

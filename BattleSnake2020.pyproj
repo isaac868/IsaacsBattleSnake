@@ -26,6 +26,9 @@
     <Compile Include="Digraph.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SnakeFunctions.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
