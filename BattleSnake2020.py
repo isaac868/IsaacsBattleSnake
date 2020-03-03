@@ -61,30 +61,36 @@ def move():
     dg.dijkstra(digraph, player_node)
     
     tmp_node = None
-    food_nodes.sort(key = lambda node: node.distance)
+    food_nodes = [food for food in food_nodes if dg.is_reachable(digraph, player_node, food) == True]
+    large_area_nodes = []
+    small_area_nodes = []
+    food_to_move_node_map = {}
+
     for food in food_nodes:
-        tmp_digraph = digraph.copy()
-        if dg.is_reachable(tmp_digraph, player_node, food) == True:
-            tmp_node = food
-            
-            while tmp_node.previous != None:
-                if tmp_node.previous == player_node:
-                    break
-                else:
-                    tmp_node = tmp_node.previous
-
-            if tmp_node is None:
-                continue
-
-            number = [0]
-            tmp_digraph = digraph.copy()
-            sf.get_area_resulting_from_next_move(tmp_digraph, tmp_node, number)
-            area = number[0]
-
-            if area <= len(data["you"]["body"]):
-                continue
-            else:
+        tmp_food_node = food
+        while tmp_food_node.previous != None:
+            if tmp_food_node.previous == player_node:
                 break
+            else:
+                tmp_food_node = tmp_food_node.previous
+        if tmp_food_node != None:
+            food_to_move_node_map[food] = tmp_food_node
+
+    for food in food_to_move_node_map:
+        number = [0]
+        sf.get_area_resulting_from_next_move(digraph, food_to_move_node_map[food], number)
+        if number[0] <= len(data["you"]["body"]):
+            small_area_nodes.append(food)
+        else:
+            large_area_nodes.append(food)
+
+    large_area_nodes.sort(key = lambda node: node.distance)
+    small_area_nodes.sort(key = lambda node: node.distance)
+    large_area_nodes.extend(small_area_nodes)
+
+    if len(large_area_nodes) != 0:
+        if large_area_nodes[0] in food_to_move_node_map:
+            tmp_node = food_to_move_node_map[large_area_nodes[0]]
 
     # Choose a random direction to move in
     directions = ["up", "down", "left", "right"]
@@ -94,8 +100,7 @@ def move():
         number = [0]
         max = 0
         for adj_node in digraph[player_node]:
-            tmp_digraph = digraph.copy()
-            sf.get_area_resulting_from_next_move(tmp_digraph, adj_node[0], number)
+            sf.get_area_resulting_from_next_move(digraph, adj_node[0], number)
             if number[0] >= max:
                 tmp_node = adj_node[0]
                 max = number[0]
@@ -115,6 +120,7 @@ def move():
     # Shouts are not displayed on the game board.
     shout = "I am a python snake!"
 
+    print("              ", move)
     response = {"move": move, "shout": shout}
     return HTTPResponse(
         status=200,

@@ -64,10 +64,11 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
 
     return [return_map, food_nodes, player_node, index_map]
 
-def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node):
-    if node1 not in adjacency_list_mapping:
+def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node, seen_set = set()):
+    if node1 not in adjacency_list_mapping or node1 in seen_set:
         return False
-    adj_nodes = adjacency_list_mapping.pop(node1)
+    adj_nodes = adjacency_list_mapping.get(node1)
+    seen_set.add(node1)
 
     for adj in adj_nodes:
         if adj[0] == node2:
@@ -75,7 +76,8 @@ def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node):
     
     tmp_bool = False
     for adj in adj_nodes:
-        tmp_bool = tmp_bool or is_reachable(adjacency_list_mapping, adj[0], node2)
+        if adj[0] not in seen_set:
+            tmp_bool = tmp_bool or is_reachable(adjacency_list_mapping, adj[0], node2, seen_set)
     return tmp_bool
 
 def dijkstra(adjacency_list_mapping : dict, start_node : node):
