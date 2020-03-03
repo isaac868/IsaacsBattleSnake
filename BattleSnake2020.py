@@ -48,33 +48,43 @@ def move():
     print("MOVE:", json.dumps(data))
 
 
-    food_coord = [data["board"]["food"][0]["x"],data["board"]["food"][0]["y"]]
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
 
-    g = dg.generate_adjacency_list(data["board"]["height"], data["board"]["width"], data["board"]["snakes"], data["you"]["body"][0], food_coord, player_coord)
-    dg.dijkstra(g[0], g[2])
+    return_data = dg.generate_adjacency_list(data["board"]["height"], data["board"]["width"], data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord)
+    digraph = return_data[0]
+    food_nodes = return_data[1]
+    player_node = return_data[2]
+
+    dg.dijkstra(digraph, player_node)
     
-    tmp_node = g[1]
-    while tmp_node.previous != None:
-        if tmp_node.previous.x == player_coord[0] and tmp_node.previous.y == player_coord[1]:
-            break
-        else:
-            tmp_node = tmp_node.previous
+    tmp_node = None
+    food_nodes.sort(key = lambda node: node.distance)
+    for food in food_nodes:
+        if dg.is_reachable(digraph, player_node, food) == True:
+            tmp_node = food
+    
+    if tmp_node is not None:
+        while tmp_node.previous != None:
+            if tmp_node.previous == player_node:
+                break
+            else:
+                tmp_node = tmp_node.previous
 
     # Choose a random direction to move in
     directions = ["up", "down", "left", "right"]
 
-    move = ""
-    if tmp_node.x < player_coord[0]:
-        move = "left"
-    elif tmp_node.x > player_coord[0]:
-        move = "right"
-    elif tmp_node.y < player_coord[1]:
-        move = "up"
-    elif tmp_node.y > player_coord[1]:
-        move = "down"
-    else:
-        move = "down"
+    move = "down"
+    if tmp_node is not None:
+        if tmp_node.x < player_coord[0]:
+            move = "left"
+        elif tmp_node.x > player_coord[0]:
+            move = "right"
+        elif tmp_node.y < player_coord[1]:
+            move = "up"
+        elif tmp_node.y > player_coord[1]:
+            move = "down"
+        else:
+            move = "down"
 
     # Shouts are messages sent to all the other snakes in the game.
     # Shouts are not displayed on the game board.

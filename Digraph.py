@@ -10,8 +10,12 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
     return_map = {}
     tmp_map = {}
     snake_coords = []
-    food_node = None
+    food_coords_normalized = []
+    food_nodes = []
     player_node = None
+
+    for food in food_coords:
+        food_coords_normalized.append(food["x"] + height * food["y"])
 
     for snake in snake_array:
         for coord in snake["body"]:
@@ -19,7 +23,7 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
                 continue
             snake_coords.append(coord["y"] * height + coord["x"])
         head = [snake["body"][0]["x"], snake["body"][0]["y"]]
-        if head == us_coord:
+        if snake["body"][0] == us_coord:
             continue
         if head[0] - 1 >= 0:
             snake_coords.append(head[1] * height + head[0] - 1)
@@ -39,8 +43,8 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
             tmp_node.x = j
             tmp_node.y = i
             
-            if [j, i] == food_coords:
-                food_node = tmp_node
+            if (i*height + j) in food_coords_normalized:
+                food_nodes.append(tmp_node)
             if [j, i] == player_coords:
                 player_node = tmp_node
 
@@ -58,7 +62,21 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
                     return_map[tmp_map[j + (i - 1) * height]].append([tmp_map[j + i * height], 1])
                     return_map[tmp_map[j + i * height]].append([tmp_map[j + (i - 1) * height], 1])
 
-    return [return_map, food_node, player_node]
+    return [return_map, food_nodes, player_node]
+
+def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node):
+    if node1 not in adjacency_list_mapping:
+        return False
+    adj_nodes = adjacency_list_mapping.pop(node1)
+
+    for adj in adj_nodes:
+        if adj[0] == node2:
+            return True
+    
+    tmp_bool = False
+    for adj in adj_nodes:
+        tmp_bool = tmp_bool or is_reachable(adjacency_list_mapping, adj[0], node2)
+    return tmp_bool
 
 def dijkstra(adjacency_list_mapping : dict, start_node : node):
     array = adjacency_list_mapping.copy()
