@@ -61,11 +61,12 @@ def move():
     dg.dijkstra(digraph, player_node)
     
     tmp_node = None
-    food_nodes = [food for food in food_nodes if dg.is_reachable(digraph, player_node, food) == True]
+    print("nodes: ",len(food_nodes))
+    food_nodes = [food for food in food_nodes if dg.is_reachable(digraph, player_node, food, set()) == True]
     large_area_nodes = []
     small_area_nodes = []
     food_to_move_node_map = {}
-
+    print("nodes: ",len(food_nodes))
     for food in food_nodes:
         tmp_food_node = food
         while tmp_food_node.previous != None:
@@ -78,7 +79,7 @@ def move():
 
     for food in food_to_move_node_map:
         number = [0]
-        sf.get_area_resulting_from_next_move(digraph, food_to_move_node_map[food], number)
+        sf.get_area_resulting_from_next_move(digraph, food_to_move_node_map[food], player_node, number, set())
         if number[0] <= len(data["you"]["body"]):
             small_area_nodes.append(food)
         else:
@@ -86,7 +87,7 @@ def move():
 
     large_area_nodes.sort(key = lambda node: node.distance)
     small_area_nodes.sort(key = lambda node: node.distance)
-    large_area_nodes.extend(small_area_nodes)
+    #large_area_nodes.extend(small_area_nodes)
 
     if len(large_area_nodes) != 0:
         if large_area_nodes[0] in food_to_move_node_map:
@@ -97,10 +98,10 @@ def move():
 
     move = "down"
     if tmp_node is None:
-        number = [0]
         max = 0
         for adj_node in digraph[player_node]:
-            sf.get_area_resulting_from_next_move(digraph, adj_node[0], number)
+            number = [0]
+            sf.get_area_resulting_from_next_move(digraph, adj_node[0], player_node, number, set())
             if number[0] >= max:
                 tmp_node = adj_node[0]
                 max = number[0]
@@ -120,7 +121,7 @@ def move():
     # Shouts are not displayed on the game board.
     shout = "I am a python snake!"
 
-    print("              ", move)
+    print("Direction: ", move)
     response = {"move": move, "shout": shout}
     return HTTPResponse(
         status=200,

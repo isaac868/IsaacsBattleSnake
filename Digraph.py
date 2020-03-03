@@ -64,7 +64,9 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
 
     return [return_map, food_nodes, player_node, index_map]
 
-def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node, seen_set = set()):
+def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node, seen_set):
+    if node1 == node2:
+        return True
     if node1 not in adjacency_list_mapping or node1 in seen_set:
         return False
     adj_nodes = adjacency_list_mapping.get(node1)
