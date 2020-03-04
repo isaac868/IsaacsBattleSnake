@@ -21,6 +21,8 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
         for coord in snake["body"]:
             if coord == us_coord:
                 continue
+            if coord == snake["body"][len(snake["body"]) - 1]:
+                continue
             snake_coords.add(coord["y"] * height + coord["x"])
         head = [snake["body"][0]["x"], snake["body"][0]["y"]]
         if snake["body"][0] == us_coord:
