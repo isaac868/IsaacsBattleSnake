@@ -3,10 +3,11 @@ from operator import attrgetter
 class node:
     x: int
     y: int
+    dims = []
     distance = 0.0
     previous = None
 
-def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list):
+def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list, low_health : bool, ommit_nodes_near_head: bool):
     return_map = {}
     snake_coords = set()
     food_coords_normalized = []
@@ -21,11 +22,11 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
         for coord in snake["body"]:
             if coord == us_coord:
                 continue
-            if coord == snake["body"][len(snake["body"]) - 1]:
-                continue
+            #if coord == snake["body"][len(snake["body"]) - 1]:
+            #    continue
             snake_coords.add(coord["y"] * height + coord["x"])
         head = [snake["body"][0]["x"], snake["body"][0]["y"]]
-        if snake["body"][0] == us_coord:
+        if snake["body"][0] == us_coord or not ommit_nodes_near_head:
             continue
         if head[0] - 1 >= 0:
             snake_coords.add(head[1] * height + head[0] - 1)
@@ -44,6 +45,8 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
             tmp_node = node()
             tmp_node.x = j
             tmp_node.y = i
+            tmp_node.dims.append(width)
+            tmp_node.dims.append(height)
             
             if (i*height + j) in food_coords_normalized:
                 food_nodes.append(tmp_node)
@@ -54,17 +57,29 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
             return_map[tmp_node] = adjacency_list
             index_map[i*height + j] = tmp_node
     
-    for i in range(0, height):
-        for j in range(0, width):
-            if (j+ i* height) in index_map:
-                if j - 1 >= 0 and (j - 1 + i* height) in index_map:
-                    return_map[index_map[j - 1 + i* height]].append([index_map[j + i * height], 1])
-                    return_map[index_map[j + i * height]].append([index_map[j - 1 + i* height], 1])
-                if i - 1 >= 0 and (j + (i - 1) * height) in index_map:
-                    return_map[index_map[j + (i - 1) * height]].append([index_map[j + i * height], 1])
-                    return_map[index_map[j + i * height]].append([index_map[j + (i - 1) * height], 1])
+    for node_index in index_map:
+        target_node = index_map[node_index]
+        node_left = index_map.get(target_node.x - 1 + target_node.y * height, None)
+        node_up   = index_map.get(target_node.x + (target_node.y - 1) * height, None)
+        
+        if  node_left != None and target_node.x - 1 >= 0:
+            connect_nodes(return_map, node_left, target_node, food_nodes, low_health)
+        if  node_up != None and target_node.y - 1 >= 0:
+            connect_nodes(return_map, node_up, target_node, food_nodes, low_health)
 
     return [return_map, food_nodes, player_node, index_map]
+
+def connect_nodes(adjacency_list_mapping : dict, node1: node, node2: node, food_nodes, low_health: bool):
+    cost = 1
+    if not low_health and (node1 in food_nodes or node2 in food_nodes):
+        cost = cost + 3
+    if not low_health and (node_is_on_edge(node1) or node_is_on_edge(node2)):
+        cost = cost + 2
+    adjacency_list_mapping[node1].append([node2, cost])
+    adjacency_list_mapping[node2].append([node1, cost])
+
+def node_is_on_edge(test_node):
+    return test_node.x == 0 or test_node.x == (test_node.dims[0] - 1) or test_node.y == 0 or test_node.y == (test_node.dims[1] - 1)
 
 def is_reachable(adjacency_list_mapping : dict, node1: node, node2: node, seen_set):
     if node1 == node2:
@@ -103,3 +118,15 @@ def dijkstra(adjacency_list_mapping : dict, start_node : node):
                 if tmp < v[0].distance:
                     v[0].distance = tmp
                     v[0].previous = u
+
+def get_next_node_from_goal_node(goal_node: node, start_node: node):
+    tmp_node = goal_node
+    while tmp_node.previous != None:
+        if tmp_node.previous == start_node:
+            break
+        else:
+            tmp_node = tmp_node.previous
+    if tmp_node != None:
+        return tmp_node
+    else:
+        return None

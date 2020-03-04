@@ -8,6 +8,7 @@ import bottle
 from bottle import HTTPResponse
 from random import choice
 
+previous_tail_coord = []
 
 @bottle.route("/")
 def index():
@@ -49,49 +50,33 @@ def move():
     data = bottle.request.json
     print("MOVE:", data["turn"])
 
+    height = data["board"]["height"]
+    width = data["board"]["width"]
+    global previous_tail_coord
+    description_string = ""
+
+    health_critical = data["you"]["health"] <= 85
 
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
 
-    return_data = dg.generate_adjacency_list(data["board"]["height"], data["board"]["width"], data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord)
+
+    return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, False, True)
     digraph = return_data[0]
     food_nodes = return_data[1]
     player_node = return_data[2]
     index_map = return_data[3]
 
     dg.dijkstra(digraph, player_node)
-    
     tmp_node = None
-    print("nodes: ",len(food_nodes))
-    food_nodes = [food for food in food_nodes if dg.is_reachable(digraph, player_node, food, set()) == True]
-    large_area_nodes = []
-    small_area_nodes = []
-    food_to_move_node_map = {}
-    print("nodes: ",len(food_nodes))
-    for food in food_nodes:
-        tmp_food_node = food
-        while tmp_food_node.previous != None:
-            if tmp_food_node.previous == player_node:
-                break
-            else:
-                tmp_food_node = tmp_food_node.previous
-        if tmp_food_node != None:
-            food_to_move_node_map[food] = tmp_food_node
 
-    for food in food_to_move_node_map:
-        number = [0]
-        sf.get_area_resulting_from_next_move(digraph, food_to_move_node_map[food], player_node, number, set())
-        if number[0] <= len(data["you"]["body"]):
-            small_area_nodes.append(food)
-        else:
-            large_area_nodes.append(food)
-
-    large_area_nodes.sort(key = lambda node: node.distance)
-    small_area_nodes.sort(key = lambda node: node.distance)
-    #large_area_nodes.extend(small_area_nodes)
-
-    if len(large_area_nodes) != 0:
-        if large_area_nodes[0] in food_to_move_node_map:
-            tmp_node = food_to_move_node_map[large_area_nodes[0]]
+    if health_critical or len(data["you"]["body"]) <= 4 or True:
+        tmp_node = sf.choose_food_target(return_data, len(data["you"]["body"]))
+        description_string = "food"
+    else:
+        if previous_tail_coord[0] in index_map:
+            tail_node = dg.get_next_node_from_goal_node(index_map[previous_tail_coord[0]], player_node)
+            tmp_node = tail_node 
+            description_string = "avoiding food"
 
     # Choose a random direction to move in
     directions = ["up", "down", "left", "right"]
@@ -99,12 +84,21 @@ def move():
     move = "down"
     if tmp_node is None:
         max = 0
+        if len(digraph[player_node]) == 0:
+            return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, False, False)
+            digraph = return_data[0]
+            food_nodes = return_data[1]
+            player_node = return_data[2]
+            index_map = return_data[3]
+
+            dg.dijkstra(digraph, player_node)
         for adj_node in digraph[player_node]:
             number = [0]
             sf.get_area_resulting_from_next_move(digraph, adj_node[0], player_node, number, set())
             if number[0] >= max:
                 tmp_node = adj_node[0]
                 max = number[0]
+                description_string = "max area"
 
     if tmp_node.x < player_coord[0]:
         move = "left"
@@ -117,11 +111,14 @@ def move():
     else:
         move = "down"
 
+    tmp_tail_coords = data["you"]["body"][len(data["you"]["body"]) - 1]
+    previous_tail_coord = [tmp_tail_coords["x"] + tmp_tail_coords["y"] * height]
+
     # Shouts are messages sent to all the other snakes in the game.
     # Shouts are not displayed on the game board.
     shout = "I am a python snake!"
 
-    print("Direction: ", move)
+    print("Direction: ", move, "move type: ", description_string)
     response = {"move": move, "shout": shout}
     return HTTPResponse(
         status=200,
