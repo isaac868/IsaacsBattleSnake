@@ -47,6 +47,9 @@ def move():
     The data parameter will contain information about the board.
     Your response must include your move of up, down, left, or right.
     """
+
+    timer = sf.ElapsedTime("time")
+
     data = bottle.request.json
     print("MOVE:", data["turn"])
 
@@ -55,12 +58,12 @@ def move():
     global previous_tail_coord
     description_string = ""
 
-    health_critical = data["you"]["health"] <= 85
+    chase_tail = data["you"]["health"] <= 85
 
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
 
 
-    return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, False, True)
+    return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, data["you"]["health"], False, True)
     digraph = return_data[0]
     food_nodes = return_data[1]
     player_node = return_data[2]
@@ -69,7 +72,7 @@ def move():
     dg.dijkstra(digraph, player_node)
     tmp_node = None
 
-    if health_critical or len(data["you"]["body"]) <= 4 or True:
+    if chase_tail or len(data["you"]["body"]) <= 4 or True:
         tmp_node = sf.choose_food_target(return_data, len(data["you"]["body"]))
         description_string = "food"
     else:
@@ -119,6 +122,7 @@ def move():
     shout = "I am a python snake!"
 
     print("Direction: ", move, "move type: ", description_string)
+    timer.EndTiming()
     response = {"move": move, "shout": shout}
     return HTTPResponse(
         status=200,

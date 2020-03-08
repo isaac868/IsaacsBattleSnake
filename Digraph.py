@@ -7,7 +7,7 @@ class node:
     distance = 0.0
     previous = None
 
-def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list, low_health : bool, ommit_nodes_near_head: bool):
+def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list, us_health: int, chase_tail : bool, ommit_nodes_near_head: bool):
     return_map = {}
     snake_coords = set()
     food_coords_normalized = []
@@ -26,7 +26,7 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
             #    continue
             snake_coords.add(coord["y"] * height + coord["x"])
         head = [snake["body"][0]["x"], snake["body"][0]["y"]]
-        if snake["body"][0] == us_coord or not ommit_nodes_near_head:
+        if snake["body"][0] == us_coord or not ommit_nodes_near_head or us_health > snake["health"]:
             continue
         if head[0] - 1 >= 0:
             snake_coords.add(head[1] * height + head[0] - 1)
@@ -63,18 +63,18 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
         node_up   = index_map.get(target_node.x + (target_node.y - 1) * height, None)
         
         if  node_left != None and target_node.x - 1 >= 0:
-            connect_nodes(return_map, node_left, target_node, food_nodes, low_health)
+            connect_nodes(return_map, node_left, target_node, food_nodes, chase_tail)
         if  node_up != None and target_node.y - 1 >= 0:
-            connect_nodes(return_map, node_up, target_node, food_nodes, low_health)
+            connect_nodes(return_map, node_up, target_node, food_nodes, chase_tail)
 
     return [return_map, food_nodes, player_node, index_map]
 
-def connect_nodes(adjacency_list_mapping : dict, node1: node, node2: node, food_nodes, low_health: bool):
+def connect_nodes(adjacency_list_mapping : dict, node1: node, node2: node, food_nodes, chase_tail: bool):
     cost = 1
-    if not low_health and (node1 in food_nodes or node2 in food_nodes):
+    if not chase_tail and (node1 in food_nodes or node2 in food_nodes):
         cost = cost + 3
-    if not low_health and (node_is_on_edge(node1) or node_is_on_edge(node2)):
-        cost = cost + 2
+    #if not chase_tail and (node_is_on_edge(node1) or node_is_on_edge(node2)):
+    #    cost = cost + 2
     adjacency_list_mapping[node1].append([node2, cost])
     adjacency_list_mapping[node2].append([node1, cost])
 

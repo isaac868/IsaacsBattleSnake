@@ -1,5 +1,17 @@
 import Digraph as dg
 from Digraph import node
+import time
+
+class ElapsedTime:
+    def __init__(self, message = None):
+        self.message = message
+        self.startTimeS = time.time()   # Time is in seconds
+    def EndTiming(self):
+        tickElapsedS = time.time() - self.startTimeS
+        if len(self.message) > 0:
+            print(self.message, tickElapsedS)
+        else:
+            print("elapsed time", tickElapsedS)
 
 def get_area_resulting_from_next_move(adjacency_list_mapping : dict, blocked_node : node, us_node : node, number: list, seen_set):
     if blocked_node not in adjacency_list_mapping or blocked_node in seen_set:
