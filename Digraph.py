@@ -7,7 +7,20 @@ class node:
     distance = 0.0
     previous = None
 
-def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coords : list, player_coords : list, us_health: int, chase_tail : bool, ommit_nodes_near_head: bool):
+def is_diagonal_to(point1, point2):
+    if [point1[0] - 1, point1[1] - 1] == point2:
+        return True
+    elif [point1[0] + 1, point1[1] - 1] == point2:
+        return True
+    elif [point1[0] + 1, point1[1] + 1] == point2:
+        return True
+    elif [point1[0] - 1, point1[1] + 1] == point2:
+        return True
+    else:
+        return False
+
+def generate_adjacency_list(width, height, snake_array: list, us_snake, food_coords : list, chase_tail : bool, ommit_nodes_near_head: bool):
+    player_coords = [us_snake["body"][0]["x"],us_snake["body"][0]["y"]]
     return_map = {}
     snake_coords = set()
     food_coords_normalized = []
@@ -20,13 +33,15 @@ def generate_adjacency_list(width, height, snake_array: list, us_coord, food_coo
 
     for snake in snake_array:
         for coord in snake["body"]:
-            if coord == us_coord:
+            if coord == us_snake["body"][0]:
                 continue
             #if coord == snake["body"][len(snake["body"]) - 1]:
             #    continue
             snake_coords.add(coord["y"] * height + coord["x"])
         head = [snake["body"][0]["x"], snake["body"][0]["y"]]
-        if snake["body"][0] == us_coord or not ommit_nodes_near_head or us_health > snake["health"]:
+        us_head = [us_snake["body"][0]["x"], us_snake["body"][0]["y"]]
+        print("ttt", is_diagonal_to(head, us_head))
+        if snake["body"][0] == us_snake["body"][0] or not ommit_nodes_near_head or (len(us_snake["body"]) > len(snake["body"]) and is_diagonal_to(head, us_head)):
             continue
         if head[0] - 1 >= 0:
             snake_coords.add(head[1] * height + head[0] - 1)

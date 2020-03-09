@@ -63,7 +63,7 @@ def move():
     player_coord = [data["you"]["body"][0]["x"],data["you"]["body"][0]["y"]] 
 
 
-    return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, data["you"]["health"], False, True)
+    return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"], data["board"]["food"], False, True)
     digraph = return_data[0]
     food_nodes = return_data[1]
     player_node = return_data[2]
@@ -88,7 +88,7 @@ def move():
     if tmp_node is None:
         max = 0
         if len(digraph[player_node]) == 0:
-            return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"]["body"][0], data["board"]["food"], player_coord, False, False)
+            return_data = dg.generate_adjacency_list(height, width, data["board"]["snakes"], data["you"], data["board"]["food"], False, False)
             digraph = return_data[0]
             food_nodes = return_data[1]
             player_node = return_data[2]
